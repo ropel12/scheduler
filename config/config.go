@@ -4,6 +4,7 @@ import "github.com/spf13/viper"
 
 type Config struct {
 	Database DatabaseConfig `mapstructure:"DATABASE"`
+	NSQ      NSQConfig      `mapstructure:"NSQ"`
 }
 type DatabaseConfig struct {
 	Host     string `mapstructure:"HOST"`
@@ -11,6 +12,11 @@ type DatabaseConfig struct {
 	Username string `mapstructure:"USERNAME"`
 	Password string `mapstructure:"PASSWORD"`
 	Name     string `mapstructure:"NAME"`
+}
+type NSQConfig struct {
+	Host  string `mapstructure:"HOST"`
+	Port  string `mapstructure:"PORT"`
+	Topic string `mapstructure:"TOPIC"`
 }
 
 func InitConfiguration() (*Config, error) {

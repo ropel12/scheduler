@@ -16,6 +16,7 @@ type (
 	SchoolRepo interface {
 		GetAllTestUrl(db *gorm.DB) ([]entities.Testlinks, error)
 		UpdateTestResult(db *gorm.DB, email, status string, schoolid int) error
+		GetUserDetailByEmail(db *gorm.DB, email string) (*entities.User, error)
 	}
 )
 
@@ -28,7 +29,7 @@ func (t *school) GetAllTestUrl(db *gorm.DB) ([]entities.Testlinks, error) {
 		return nil, err
 	}
 	if len(res) == 0 {
-		return nil, errors.New("Url Test Doesn't exist")
+		return nil, errors.New("Test Url Doesn't exist")
 	}
 	return res, nil
 }
@@ -51,4 +52,15 @@ func (t *school) UpdateTestResult(db *gorm.DB, email, status string, schoolid in
 		}
 		return nil
 	})
+}
+
+func (t *school) GetUserDetailByEmail(db *gorm.DB, email string) (*entities.User, error) {
+	res := entities.User{}
+	if err := db.Table("users").Where("email=? AND is_verified=1 AND deleted_at IS NULL", email).Select("first_name,sure_name").Scan(&res).Error; err != nil {
+		return nil, err
+	}
+	if res.FirstName == "" {
+		return nil, errors.New("Data Not Found")
+	}
+	return &res, nil
 }
