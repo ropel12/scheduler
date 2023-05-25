@@ -26,7 +26,7 @@ func main() {
 	nsq, err := pkg.NewNSQ(conf)
 	helper.PanicIfError(err)
 	schoolserv := service.NewService(db, schoolrepo, nsq)
-	local, _ := time.LoadLocation("Asia/Bangkok")
+	local := time.Now().Location()
 	scheduler := cron.New(cron.WithLocation(local))
 	defer scheduler.Stop()
 	scheduler.AddFunc("*/1 * * * *", schoolserv.UpdateTestResult)
