@@ -23,9 +23,8 @@ func main() {
 	helper.PanicIfError(err)
 	schoolrepo := repository.NewRepo()
 	schoolserv := service.NewService(db, schoolrepo)
-	jakartaTime, _ := time.LoadLocation("Asia/Jakarta")
-	scheduler := cron.New(cron.WithLocation(jakartaTime))
-
+	localTime := time.Now().Local().Location()
+	scheduler := cron.New(cron.WithLocation(localTime))
 	defer scheduler.Stop()
 	scheduler.AddFunc("*/1 * * * *", schoolserv.UpdateTestResult)
 	// scheduler.AddFunc("0 0 1 1 *", func() { SendAutomail("New Year") })
