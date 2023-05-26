@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/ropel12/scheduler/helper"
@@ -53,14 +54,14 @@ func (s *service) UpdateTestResult() {
 							if err != nil {
 								log.Printf("Error: %v", err)
 							} else {
-								if s.emailmaps[email] == 0 || s.emailmaps[email] != leng {
+								if s.emailmaps[fmt.Sprintf("%s%d", email, val.ID)] == 0 || s.emailmaps[fmt.Sprintf("%s%d", email, val.ID)] != leng {
 									encodeddata, _ := json.Marshal(map[string]any{"email": email, "name": user.FirstName + " " + user.SureName, "school": val.Name, "reason": "Anda tidak berhasil dalam tes tersebut."})
 									go func() {
 										if err := s.nsq.Publish("1", encodeddata); err != nil {
 											log.Printf("Error: %v", err)
 										}
 									}()
-									s.emailmaps[email] = leng
+									s.emailmaps[fmt.Sprintf("%s%d", email, val.ID)] = leng
 								}
 							}
 						}
