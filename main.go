@@ -7,13 +7,12 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/robfig/cron/v3"
 	"github.com/ropel12/scheduler/config"
 	"github.com/ropel12/scheduler/helper"
 	"github.com/ropel12/scheduler/pkg"
 	"github.com/ropel12/scheduler/repository"
 	"github.com/ropel12/scheduler/service"
-
-	"github.com/robfig/cron/v3"
 )
 
 func main() {
