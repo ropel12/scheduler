@@ -17,6 +17,8 @@ type (
 		GetAllTestUrl(db *gorm.DB) ([]entities.Testlinks, error)
 		UpdateTestResult(db *gorm.DB, email, status string, schoolid int) error
 		GetUserDetailByEmail(db *gorm.DB, email string) (*entities.User, error)
+		GetAllSchedules(db *gorm.DB) ([]entities.BillingSchedule, error)
+		DeleteSchedule(db *gorm.DB, id int) error
 	}
 )
 
@@ -63,4 +65,18 @@ func (t *school) GetUserDetailByEmail(db *gorm.DB, email string) (*entities.User
 		return nil, errors.New("Data Not Found")
 	}
 	return &res, nil
+}
+
+func (t *school) GetAllSchedules(db *gorm.DB) ([]entities.BillingSchedule, error) {
+	res := []entities.BillingSchedule{}
+	if err := db.Where("date <= NOW() AND deleted_at IS NULL").Find(&res).Error; err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+func (t *school) DeleteSchedule(db *gorm.DB, id int) error {
+	if err := db.Where("id=?", id).Delete(&entities.BillingSchedule{}).Error; err != nil {
+		return err
+	}
+	return nil
 }

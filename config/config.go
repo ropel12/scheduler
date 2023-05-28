@@ -14,9 +14,10 @@ type DatabaseConfig struct {
 	Name     string `mapstructure:"NAME"`
 }
 type NSQConfig struct {
-	Host  string `mapstructure:"HOST"`
-	Port  string `mapstructure:"PORT"`
-	Topic string `mapstructure:"TOPIC"`
+	Host   string `mapstructure:"HOST"`
+	Port   string `mapstructure:"PORT"`
+	Topic  string `mapstructure:"TOPIC"`
+	Topic2 string `mapstructure:"TOPIC2"`
 }
 
 func InitConfiguration() (*Config, error) {

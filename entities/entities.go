@@ -1,5 +1,7 @@
 package entities
 
+import "gorm.io/gorm"
+
 type (
 	Progress struct {
 		ID       uint `gorm:"primaryKey;autoIncrement;not null"`
@@ -24,7 +26,15 @@ type (
 		FirstName string
 		SureName  string
 	}
-
+	BillingSchedule struct {
+		ID           uint `gorm:"primaryKey;not null;autoIncrement"`
+		StudentName  string
+		StudentEmail string
+		SchoolName   string
+		DeletedAt    gorm.DeletedAt `gorm:"index"`
+		Date         string         `gorm:"type:timestamp;not null"`
+		Total        int
+	}
 	HttpResponse struct {
 		Code    int          `json:"code"`
 		Message string       `json:"message"`

@@ -22,6 +22,7 @@ type (
 	}
 	Service interface {
 		UpdateTestResult()
+		SendMonthlyBilling()
 	}
 )
 
@@ -72,4 +73,24 @@ func (s *service) UpdateTestResult() {
 		}
 	}
 	log.Println("[INFO]SUCCESS UPDATING TEST")
+}
+func (s *service) SendMonthlyBilling() {
+	datas, err := s.repo.GetAllSchedules(s.db.WithContext(context.Background()))
+	if err != nil {
+		log.Printf("[ERROR]WHEN GETTING SCHEDULES DATA, Err: %v", err)
+	} else {
+		if len(datas) > 0 {
+			for _, val := range datas {
+				encodeddata, _ := json.Marshal(map[string]any{"email": val.StudentEmail, "name": val.StudentName, "school": val.SchoolName, "total": val.Total})
+				if err := s.nsq.Publish("2", encodeddata); err != nil {
+					log.Printf("Error: %v", err)
+				}
+				if err := s.repo.DeleteSchedule(s.db.WithContext(context.Background()), int(val.ID)); err != nil {
+					log.Printf("[ERROR]WHEN DELETING SCHEDULE DATA, Err  :%v", err)
+				}
+
+			}
+		}
+		log.Println("[INFO]SUCCESSFULLY SENT MONTHLY BILLING")
+	}
 }

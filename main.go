@@ -29,7 +29,7 @@ func main() {
 	scheduler := cron.New(cron.WithLocation(local))
 	defer scheduler.Stop()
 	scheduler.AddFunc("*/1 * * * *", schoolserv.UpdateTestResult)
-	// scheduler.AddFunc("0 0 1 1 *", func() { SendAutomail("New Year") })
+	scheduler.AddFunc("@every 30s", schoolserv.SendMonthlyBilling)
 	go scheduler.Start()
 	log.Println("[INFO] Starting Service Scheduler")
 	sig := make(chan os.Signal, 1)
