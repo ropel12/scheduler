@@ -15,10 +15,10 @@ import (
 
 type (
 	service struct {
-		db        *gorm.DB
-		repo      repository.SchoolRepo
-		nsq       *pkg.NSQProducer
-		emailmaps map[string]int
+		db     *gorm.DB
+		repo   repository.SchoolRepo
+		nsq    *pkg.NSQProducer
+		pusher *pkg.Pusher
 	}
 	Service interface {
 		UpdateTestResult()
@@ -26,8 +26,8 @@ type (
 	}
 )
 
-func NewService(db *gorm.DB, repo repository.SchoolRepo, nsq *pkg.NSQProducer) Service {
-	return &service{db: db, repo: repo, nsq: nsq, emailmaps: make(map[string]int)}
+func NewService(db *gorm.DB, repo repository.SchoolRepo, nsq *pkg.NSQProducer, pusher *pkg.Pusher) Service {
+	return &service{db: db, repo: repo, nsq: nsq, pusher: pusher}
 }
 
 func (s *service) UpdateTestResult() {
@@ -46,23 +46,37 @@ func (s *service) UpdateTestResult() {
 					}
 					for email, val3 := range mapss {
 						leng := len(val3) - 1
-						err := s.repo.UpdateTestResult(s.db.WithContext(context.Background()), email, val3[leng], int(val.ID))
+						progid, err := s.repo.UpdateTestResult(s.db.WithContext(context.Background()), email, val3[leng], int(val.ID))
 						if err != nil {
 							log.Printf("Err: %v", err)
 						}
 						if val3[leng] == "Fail" {
 							user, err := s.repo.GetUserDetailByEmail(s.db.WithContext(context.Background()), email)
 							if err != nil {
-								log.Printf("Error: %v", err)
+								log.Printf("[ERROR]WHEN Getting Detail User, Error: %v", err)
 							} else {
-								if s.emailmaps[fmt.Sprintf("%s%d", email, val.ID)] == 0 || s.emailmaps[fmt.Sprintf("%s%d", email, val.ID)] != leng {
+								if progid != 0 {
 									encodeddata, _ := json.Marshal(map[string]any{"email": email, "name": user.FirstName + " " + user.SureName, "school": val.Name, "reason": "Anda tidak berhasil dalam tes tersebut."})
 									go func() {
 										if err := s.nsq.Publish("1", encodeddata); err != nil {
 											log.Printf("Error: %v", err)
 										}
 									}()
-									s.emailmaps[fmt.Sprintf("%s%d", email, val.ID)] = leng
+									fmt.Println(progid, "progid", "username", user.Username, "status", val3[leng])
+									s.pusher.Publish(map[string]any{"username": user.Username, "type": "admission", "status": "Failed Test Result", "progress_id": progid}, 2)
+									s.pusher.Publish(map[string]any{"type": "admission", "status": "Failed Test Result", "progress_id": progid}, 3)
+								}
+							}
+						} else {
+							user, err := s.repo.GetUserDetailByEmail(s.db.WithContext(context.Background()), email)
+							if err != nil {
+								log.Printf("[ERROR]WHEN Getting Detail User, Error: %v", err)
+							} else {
+								if progid != 0 {
+									fmt.Println(progid, "progid", "username", user.Username, "status", "sukses")
+									s.pusher.Publish(map[string]any{"username": user.Username, "type": "admission", "status": "Test Result", "progress_id": progid}, 2)
+									s.pusher.Publish(map[string]any{"type": "admission", "status": "Test Result", "progress_id": progid}, 3)
+
 								}
 							}
 						}

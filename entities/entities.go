@@ -23,6 +23,7 @@ type (
 		Name string
 	}
 	User struct {
+		Username  string
 		FirstName string
 		SureName  string
 	}

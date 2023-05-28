@@ -15,7 +15,7 @@ type (
 	school     struct{}
 	SchoolRepo interface {
 		GetAllTestUrl(db *gorm.DB) ([]entities.Testlinks, error)
-		UpdateTestResult(db *gorm.DB, email, status string, schoolid int) error
+		UpdateTestResult(db *gorm.DB, email, status string, schoolid int) (int, error)
 		GetUserDetailByEmail(db *gorm.DB, email string) (*entities.User, error)
 		GetAllSchedules(db *gorm.DB) ([]entities.BillingSchedule, error)
 		DeleteSchedule(db *gorm.DB, id int) error
@@ -35,8 +35,9 @@ func (t *school) GetAllTestUrl(db *gorm.DB) ([]entities.Testlinks, error) {
 	}
 	return res, nil
 }
-func (t *school) UpdateTestResult(db *gorm.DB, email, status string, schoolid int) error {
-	return db.Transaction(func(db *gorm.DB) error {
+func (t *school) UpdateTestResult(db *gorm.DB, email, status string, schoolid int) (int, error) {
+	progress := entities.Progress{}
+	err := db.Transaction(func(db *gorm.DB) error {
 		var user = udata{}
 		if err := db.Table("users").Where("email=? AND is_verified=1 AND deleted_at IS NULL", email).Select("id").Scan(&user).Error; err != nil {
 			return err
@@ -49,16 +50,20 @@ func (t *school) UpdateTestResult(db *gorm.DB, email, status string, schoolid in
 		} else {
 			status = "Test Result"
 		}
-		if err := db.Model(&entities.Progress{}).Where("school_id=? AND user_id=? AND status='Send Test Link'", schoolid, user.ID).Update("status", status).Error; err != nil {
+		if err := db.Model(&progress).Where("school_id=? AND user_id=? AND status='Send Test Link'", schoolid, user.ID).Scan(&progress).Update("status", status).Error; err != nil {
 			return err
 		}
 		return nil
 	})
+	if err != nil {
+		return 0, err
+	}
+	return int(progress.ID), nil
 }
 
 func (t *school) GetUserDetailByEmail(db *gorm.DB, email string) (*entities.User, error) {
 	res := entities.User{}
-	if err := db.Table("users").Where("email=? AND is_verified=1 AND deleted_at IS NULL", email).Select("first_name,sure_name").Scan(&res).Error; err != nil {
+	if err := db.Table("users").Where("email=? AND is_verified=1 AND deleted_at IS NULL", email).Select("username,first_name,sure_name").Scan(&res).Error; err != nil {
 		return nil, err
 	}
 	if res.FirstName == "" {
