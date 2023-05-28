@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 
 	"github.com/ropel12/scheduler/helper"
@@ -62,7 +61,6 @@ func (s *service) UpdateTestResult() {
 											log.Printf("Error: %v", err)
 										}
 									}()
-									fmt.Println(progid, "progid", "username", user.Username, "status", val3[leng])
 									s.pusher.Publish(map[string]any{"username": user.Username, "type": "admission", "status": "Failed Test Result", "progress_id": progid}, 2)
 									s.pusher.Publish(map[string]any{"type": "admission", "status": "Failed Test Result", "progress_id": progid}, 3)
 								}
@@ -73,10 +71,8 @@ func (s *service) UpdateTestResult() {
 								log.Printf("[ERROR]WHEN Getting Detail User, Error: %v", err)
 							} else {
 								if progid != 0 {
-									fmt.Println(progid, "progid", "username", user.Username, "status", "sukses")
 									s.pusher.Publish(map[string]any{"username": user.Username, "type": "admission", "status": "Test Result", "progress_id": progid}, 2)
 									s.pusher.Publish(map[string]any{"type": "admission", "status": "Test Result", "progress_id": progid}, 3)
-
 								}
 							}
 						}
